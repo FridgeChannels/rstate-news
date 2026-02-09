@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta
 from supabase import create_client, Client
-from supabase.lib.client_options import ClientOptions
 
 from config.settings import settings
 from utils.logger import logger
@@ -19,14 +18,10 @@ class DatabaseManager:
     """Supabase数据库管理器"""
     
     def __init__(self):
-        """初始化Supabase客户端"""
+        """初始化Supabase客户端（使用默认 options，兼容 supabase>=2.10）"""
         self.client: Client = create_client(
             settings.supabase_url,
             settings.supabase_key,
-            options=ClientOptions(
-                auto_refresh_token=True,
-                persist_session=True
-            )
         )
         self.data_cleaner = DataCleaner()  # 用于URL标准化
         logger.info("Supabase客户端初始化成功")

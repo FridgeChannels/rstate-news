@@ -1,6 +1,7 @@
 # Core dependencies
 playwright==1.40.0
-supabase==2.3.0
+# supabase>=2.10 与 httpx>=0.26 兼容，避免 gotrue 的 proxy 参数报错
+supabase>=2.10.0,<3.0
 apscheduler==3.10.4
 pandas==2.1.4
 python-dotenv==1.0.0
@@ -13,8 +14,8 @@ python-dateutil==2.8.2
 trafilatura>=1.6.0
 newspaper3k>=0.2.8
 
-# HTTP and networking
-httpx>=0.24.0,<0.25.0
+# HTTP and networking（supabase/gotrue 需 httpx>=0.26 以支持 proxy 等参数）
+httpx>=0.26.0,<0.28.0
 aiohttp==3.9.1
 
 # Logging and utilities

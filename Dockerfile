@@ -37,5 +37,6 @@ COPY main.py .
 RUN mkdir -p logs
 
 # 使用 xvfb 提供虚拟显示，避免 Realtor 等 headed 模式在无界面环境下报错
+# 启动前清理可能存在的旧锁文件，避免容器重启时报 display 99 already active
 ENV DISPLAY=:99
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 & sleep 2 && exec python main.py"]
+CMD ["sh", "-c", "rm -f /tmp/.X99-lock 2>/dev/null; Xvfb :99 -screen 0 1920x1080x24 & sleep 2 && exec python main.py"]
