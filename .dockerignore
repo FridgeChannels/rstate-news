@@ -1,0 +1,21 @@
+# 忽略本地环境与无关文件
+.env
+.env.local
+.git
+.gitignore
+.issues
+.cursor
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+htmlcov
+.idea
+.vscode
+*.md
+!README.md
+.playwright
+output
+logs
+*.log
+node_modules
