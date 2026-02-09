@@ -190,11 +190,11 @@ rstate-news/
    SCHEDULER_ENABLED=false
    ```
 2. **用系统或云平台的定时任务**每天执行一次，例如：
-   - **Linux cron**（每天凌晨 2 点）：
+   - **Linux cron**（每天凌晨 2 点，**无需 Docker**，在服务器上装好 Python 与依赖即可）：
      ```bash
      0 2 * * * cd /path/to/rstate-news && python main.py
      ```
-   - **Docker + cron**：宿主机 cron 或单独 cron 容器每天 `docker run --rm --env-file .env your-image python main.py`
+   - **Docker + cron**（可选）：若希望用容器跑，可由宿主机 cron 每天 `docker run --rm --env-file .env your-image python main.py`
    - **GitHub Actions / Render Cron / 云函数定时**：每天触发一次运行 `python main.py`
 
 这样每次启动都会做一次**全量采集**（所有激活源 + 所有 zipcode），执行完后进程退出，无需常驻进程。
@@ -214,6 +214,38 @@ rstate-news/
 - [ ] `play_news_sources` 中需采集的源已激活，`magnet` 表中有 zipcode（局部新闻需要）
 - [ ] 若用 Docker：已安装 Chromium（镜像 `mcr.microsoft.com/playwright/python` 已包含），Realtor 等需虚拟显示时使用 xvfb（Dockerfile 已配置）
 - [ ] 每天跑一次时建议使用 `SCHEDULER_ENABLED=false` + 外部 cron/云定时
+
+## Docker 与 Playwright（容器内浏览器）
+
+### 结论：容器内可用，无需单独安装 Chrome/Chromium 或 chromedriver
+
+- **Playwright 官方镜像**（`mcr.microsoft.com/playwright/python`）已内置 **Chromium** 及所需系统依赖，无需在镜像里再执行 `playwright install` 或安装系统 Chrome。
+- **没有使用 Selenium 的 chromedriver**：本项目通过 `playwright.chromium.launch()` 启动浏览器，由 Playwright 自带的浏览器二进制与驱动一体完成，不依赖单独 ChromeDriver。
+- **Realtor.com 在容器内**：主流程对 Realtor 使用 `headless=False`（便于过反爬）。容器内无真实显示器，Dockerfile 已用 **xvfb** 提供虚拟显示（`DISPLAY=:99`，启动时先起 Xvfb 再跑 `python main.py`），因此 headed 模式在 Docker 中可正常运行。
+
+### 代码层面已适配容器
+
+- 在 **非 macOS**（即 Linux 容器）下，`base_scraper` 会为 Chromium 加上：
+  - `--no-sandbox`、`--disable-dev-shm-usage`（避免容器内沙箱与共享内存问题），
+  - 以及 headed 时的 `--disable-gpu` 等参数，适配无显卡 + xvfb 环境。
+- 仅在 **macOS** 上才会走「系统 Chrome + 持久化 profile」分支；容器内为 Linux，统一走 Chromium + 上述参数，与当前 Docker 镜像一致。
+
+### 运行 Docker 时的注意点
+
+- **`--ipc=host`**：Chromium 在容器内可能因 IPC 命名空间导致崩溃或 OOM，官方建议运行时加 `--ipc=host`。示例：
+  ```bash
+  docker run --rm -it --env-file .env --ipc=host rstate-news
+  ```
+- **镜像标签**：Dockerfile 使用与 `playwright==1.40.0` 对应的镜像（如 `v1.40.0-jammy`）。若升级 Playwright 版本，请同步改用对应标签（如 `v1.xx.x-jammy` 或 `v1.xx.x-noble`），否则可能出现浏览器路径不匹配。
+
+### 小结
+
+| 项目           | 说明 |
+|----------------|------|
+| Chromium       | 由 Playwright 镜像提供，无需额外安装 |
+| ChromeDriver   | 不使用；Playwright 自带浏览器与驱动 |
+| headed 模式    | 通过 xvfb + `DISPLAY=:99` 支持 |
+| 容器内运行     | 已用 `--no-sandbox`、`--disable-dev-shm-usage` 等参数适配；运行建议加 `--ipc=host` |
 
 ## 注意事项
 

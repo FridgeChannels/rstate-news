@@ -38,6 +38,9 @@ logs/
 *.swo
 *~
 
+# issues
+.issues/
+
 # OS
 .DS_Store
 Thumbs.db

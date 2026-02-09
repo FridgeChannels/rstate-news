@@ -1,0 +1,44 @@
+# rstate-news 采集服务
+# 所有配置通过 environment 声明，取值来自同目录 .env（docker-compose 自动用 .env 做变量替换）
+# 启动: docker-compose up -d
+# 日志: docker-compose logs -f
+
+services:
+  rstate-news:
+    build: .
+    image: rstate-news:latest
+    container_name: rstate-news
+    restart: unless-stopped
+    ipc: host
+    init: true
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      # Supabase
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      # 调度与调试
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+      - SCHEDULER_ENABLED=${SCHEDULER_ENABLED:-true}
+      - SCHEDULER_TIMEZONE=${SCHEDULER_TIMEZONE:-America/New_York}
+      - SCHEDULER_HOUR=${SCHEDULER_HOUR:-2}
+      - SCHEDULER_MINUTE=${SCHEDULER_MINUTE:-0}
+      # 采集
+      - SCRAPE_DELAY_MIN=${SCRAPE_DELAY_MIN:-1}
+      - SCRAPE_DELAY_MAX=${SCRAPE_DELAY_MAX:-3}
+      - SCRAPE_RETRY_MAX=${SCRAPE_RETRY_MAX:-3}
+      - SCRAPE_TIME_RANGE_DAYS=${SCRAPE_TIME_RANGE_DAYS:-7}
+      # 通知
+      - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED:-true}
+      - NOTIFICATION_TYPE=${NOTIFICATION_TYPE:-log}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - NOTIFICATION_EMAIL_TO=${NOTIFICATION_EMAIL_TO:-}
+      # 日志
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FILE=${LOG_FILE:-logs/scraper.log}
+      - LOG_MAX_BYTES=${LOG_MAX_BYTES:-10485760}
+      - LOG_BACKUP_COUNT=${LOG_BACKUP_COUNT:-5}
+    # 仅跑一次后退出：在 .env 中设 DEBUG_MODE=true、SCHEDULER_ENABLED=false，或在运行前 export 这两个变量

@@ -2,6 +2,7 @@
 # 基于 Playwright 官方 Python 镜像（已含 Chromium 及系统依赖）
 # 构建: docker build -t rstate-news .
 # 运行: docker run --rm -it --env-file .env --ipc=host rstate-news
+#       --ipc=host 为 Chromium 在容器内稳定运行所必需，见 README「Docker 与 Playwright」
 
 # 使用 jammy (Ubuntu 22.04)；v1.40.0-noble 可能不存在，与 requirements.txt 中 playwright==1.40.0 对应
 FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
